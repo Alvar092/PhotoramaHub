@@ -15,6 +15,7 @@ class PhotosViewController: UIViewController {
     var currentIndex = 0
     var interestingIndex = 0
     var recentIndex = 0
+    var showingInteresting: Bool = false
     
     @IBAction func photoTypeChanged(_ sender: UISegmentedControl) {
         let fetchPhotos: (@escaping (Result<[Photo], Error>) -> Void) -> Void
@@ -22,8 +23,10 @@ class PhotosViewController: UIViewController {
         switch sender.selectedSegmentIndex {
         case 0:
             fetchPhotos = store.fetchInterestingPhotos
+            showingInteresting = true
         case 1:
             fetchPhotos = store.fetchRecentPhotos
+            showingInteresting = false
         default:
             return
         }
@@ -32,10 +35,15 @@ class PhotosViewController: UIViewController {
             switch photosResult {
             case let .success(photos):
                 print("Succesfully found \(photos.count) photos.")
-                self.photosCollection = photos
-                self.currentIndex = 0
-                if let firstPhoto = photos.first {
-                    self.updateImageView(for: firstPhoto)
+                DispatchQueue.main.async {
+                    self.photosCollection = photos
+                    if self.showingInteresting {
+                        self.currentIndex = self.interestingIndex
+                    } else {
+                        self.currentIndex = self.recentIndex
+                    }
+                    let currentPhoto = photos[self.currentIndex]
+                    self.updateImageView(for: currentPhoto)
                 }
             case let .failure(error):
                 print("Error fetching interesting photos: \(error)")
@@ -51,10 +59,21 @@ class PhotosViewController: UIViewController {
         imageView.isUserInteractionEnabled = true
         imageView.addGestureRecognizer(tapGesture)
         
-        store.fetchInterestingPhotos {
-            (photosResult) -> Void in
-            
-            
+        showingInteresting = true
+        
+        store.fetchInterestingPhotos { (photosResult) in
+            switch photosResult {
+            case let .success(photos):
+                DispatchQueue.main.async {
+                    self.photosCollection = photos
+                    self.currentIndex = 0
+                    if let firstPhoto = photos.first {
+                        self.updateImageView(for: firstPhoto)
+                    }
+                }
+            case let .failure(error):
+                print("Error fetching photos: \(error)")
+            }
         }
     }
     
@@ -78,7 +97,15 @@ class PhotosViewController: UIViewController {
             print("Error, photos is empty")
             return
         }
-        currentIndex = (currentIndex + 1) % photosCollection.count
+        if showingInteresting {
+            interestingIndex += 1
+            currentIndex = interestingIndex
+            print("Showing interesting picture \(currentIndex)")
+        } else {
+            recentIndex += 1
+            currentIndex = recentIndex
+            print("Showing recent picture \(currentIndex)")
+        }
         
         let nextPhoto = photosCollection[currentIndex]
         updateImageView(for: nextPhoto)

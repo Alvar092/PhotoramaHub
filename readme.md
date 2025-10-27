@@ -1,4 +1,4 @@
-##Photorama 
+## Photorama 
 
 Photorama es una aplicación iOS que permite explorar y visualizar fotos desde la API de Flickr. La app permite alternar entre fotos interesantes y fotos recientes, mostrando la colección de imágenes en un flujo sencillo y navegable mediante gestos.
 
@@ -16,13 +16,13 @@ Photorama es una aplicación iOS que permite explorar y visualizar fotos desde l
 
 Photorama esta implementada siguiendo una arquitectura MVC(Model-View-Controller):
 
-· Model: 
+#### · Model: 
 
 Photo: Representa cada foto de la API
 
 PhotoStore: Maneja la descarga de fotos, abstrayendo la interacción con la API. 
 
-· View: 
+#### · View: 
 
 PhotosViewController: controla la interfaz, muestra las imágenes y gestiona la interacción del usuario. 
 
@@ -30,7 +30,7 @@ UIImageView: usada para mostrar la foto actual.
 
 UISegmentedControl: permite alternar entre tipos de fotos. 
 
-· Controller: 
+#### · Controller: 
 
 Gestiona la comunicación entre PhotoStore y la interfaz(PhotosViewController).
 

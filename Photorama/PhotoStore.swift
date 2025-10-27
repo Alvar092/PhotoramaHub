@@ -41,6 +41,11 @@ class PhotoStore {
         let task = session.dataTask(with: request) {
             (data, response, error) -> Void in
             
+            if let httpResponse = response as? HTTPURLResponse {
+                print("Status code: \(httpResponse.statusCode)")
+                print("Headers: \(httpResponse.allHeaderFields)")
+            }
+            
             let result = self.processPhotosRequest(data: data, error: error)
             completion(result)
         }
@@ -66,7 +71,7 @@ class PhotoStore {
             let imageData = data,
             let image = UIImage(data: imageData) else {
             
-            //Couldn't creat image
+            //Couldn't createhtt image
             if data == nil {
                 return .failure(error!)
             } else {

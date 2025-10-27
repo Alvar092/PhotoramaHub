@@ -8,18 +8,30 @@
 import UIKit
 
 class PhotosViewController: UIViewController {
+
     @IBOutlet var imageView: UIImageView!
     var store: PhotoStore!
+    var photosCollection: [Photo] = []
+    var currentIndex: Int = 0
+    
+
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(didTapScreen))
+        
+        imageView.isUserInteractionEnabled = true
+        imageView.addGestureRecognizer(tapGesture)
+        
         store.fetchInterestingPhotos {
             (photosResult) -> Void in
             
             switch photosResult {
             case let .success(photos):
                 print("Succesfully found \(photos.count) photos.")
-                if let firstPhoto = photos.first {
+                self.photosCollection = photos
+                if let firstPhoto = self.photosCollection.first {
                     self.updateImageView(for: firstPhoto)
                 }
             case let .failure(error):
@@ -34,10 +46,24 @@ class PhotosViewController: UIViewController {
             
             switch ImageResult {
             case let .success(image):
-                self.imageView.image = image
+                DispatchQueue.main.async {
+                    self.imageView.image = image
+                }
             case let .failure(error):
                 print("Error downloading image: \(error)")
             }
         }
     }
+    
+    @objc func didTapScreen() {
+        guard !photosCollection.isEmpty else {
+            print("Error, photos is empty")
+            return
+        }
+        currentIndex = (currentIndex + 1) % photosCollection.count
+        
+        let nextPhoto = photosCollection[currentIndex]
+        updateImageView(for: nextPhoto)
+    }
 }
+

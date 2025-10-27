@@ -13,6 +13,7 @@ enum FlickrError: Error {
 
 enum Method: String {
   case interestingPhotos = "flickr.interestingness.getList"
+    case recentPhotos = "flickr.photos.getRecent"
 }
 
 struct FlickrAPI {
@@ -31,14 +32,16 @@ struct FlickrAPI {
     }
     
     private static func flickrURL( method: Method, parameters: [String:String]?) -> URL {
-        var components = URLComponents(string: baseURLSting)!
+        guard var components = URLComponents(string: baseURLSting) else {
+            fatalError("Invalid base URL")
+        }
         
         var queryItems = [URLQueryItem]()
         
         let baseParams = [
             "method": method.rawValue,
             "format": "json",
-            "njsoncallback": "1",
+            "nojsoncallback": "1",
             "api_key": apiKey
         ]
         
@@ -55,7 +58,10 @@ struct FlickrAPI {
         }
         components.queryItems = queryItems
         
-        return components.url!
+        guard let url = components.url else {
+            fatalError("Couldn't create URL from components")
+        }
+        return url
     }
     
     static func photos(fromJSON data: Data) -> PhotosResult {
@@ -63,7 +69,7 @@ struct FlickrAPI {
             let jsonObject = try JSONSerialization.jsonObject(with: data, options: [])
             
             guard
-                let jsonDictionary = jsonObject as? [AnyHashable: Any],
+                let jsonDictionary = jsonObject as? [String: Any],
                 let photos = jsonDictionary["photos"] as? [String: Any],
                 let photosArray = photos["photo"] as? [[String:Any]] else {
                 
@@ -79,8 +85,6 @@ struct FlickrAPI {
             }
             
             if finalPhotos.isEmpty && !photosArray.isEmpty{
-                //We werent able to parse any of the photos
-                //Maybe the JSON format for photos has changed
                 return .failure(FlickrError.invalidJSONData)
             }
             
@@ -94,7 +98,7 @@ struct FlickrAPI {
         guard
             let photoID = json ["id"] as? String,
             let title = json["title"] as? String,
-            let dateString = json["dateTaken"] as? String,
+            let dateString = json["datetaken"] as? String,
             let photoURLString = json["url_h"] as? String,
             let url =  URL(string: photoURLString),
             let dateTaken = dateFormatter.date(from: dateString) else {

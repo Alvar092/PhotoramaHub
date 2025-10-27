@@ -12,9 +12,36 @@ class PhotosViewController: UIViewController {
     @IBOutlet var imageView: UIImageView!
     var store: PhotoStore!
     var photosCollection: [Photo] = []
-    var currentIndex: Int = 0
+    var currentIndex = 0
+    var interestingIndex = 0
+    var recentIndex = 0
     
-
+    @IBAction func photoTypeChanged(_ sender: UISegmentedControl) {
+        let fetchPhotos: (@escaping (Result<[Photo], Error>) -> Void) -> Void
+        
+        switch sender.selectedSegmentIndex {
+        case 0:
+            fetchPhotos = store.fetchInterestingPhotos
+        case 1:
+            fetchPhotos = store.fetchRecentPhotos
+        default:
+            return
+        }
+        
+        fetchPhotos { (photosResult: Result<[Photo], Error>) in
+            switch photosResult {
+            case let .success(photos):
+                print("Succesfully found \(photos.count) photos.")
+                self.photosCollection = photos
+                self.currentIndex = 0
+                if let firstPhoto = photos.first {
+                    self.updateImageView(for: firstPhoto)
+                }
+            case let .failure(error):
+                print("Error fetching interesting photos: \(error)")
+            }
+        }
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -27,16 +54,7 @@ class PhotosViewController: UIViewController {
         store.fetchInterestingPhotos {
             (photosResult) -> Void in
             
-            switch photosResult {
-            case let .success(photos):
-                print("Succesfully found \(photos.count) photos.")
-                self.photosCollection = photos
-                if let firstPhoto = self.photosCollection.first {
-                    self.updateImageView(for: firstPhoto)
-                }
-            case let .failure(error):
-                print("Error fetching interesting photos: \(error)")
-            }
+            
         }
     }
     

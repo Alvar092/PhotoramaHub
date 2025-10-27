@@ -31,6 +31,10 @@ struct FlickrAPI {
         return flickrURL(method: .interestingPhotos, parameters: ["extras": "url_h,date_taken"])
     }
     
+    static var recentPhotosURL: URL {
+        return flickrURL(method: .recentPhotos, parameters: ["extras": "url_h,date_taken"])
+    }
+    
     private static func flickrURL( method: Method, parameters: [String:String]?) -> URL {
         guard var components = URLComponents(string: baseURLSting) else {
             fatalError("Invalid base URL")

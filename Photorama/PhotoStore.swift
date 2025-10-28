@@ -24,7 +24,10 @@ class PhotoStore {
         return URLSession(configuration: config)
     }()
    
-    private func processPhotosRequest(data: Data?, error: Error?) ->  PhotosResult {
+
+    private func processPhotosRequest(data: Data?,
+                                      error: Error?,
+                                      completion: @escaping (PhotosResult)-> Void) {
         guard let jsonData = data else {
             return .failure(error!)
         }
@@ -43,8 +46,28 @@ class PhotoStore {
                 print("Headers: \(httpResponse.allHeaderFields)")
             }
             
+<<<<<<< HEAD
             let result = self.processPhotosRequest(data: data, error: error)
             completion(result)
+=======
+            do{
+                try context.save()
+            } catch {
+                print("Error saving to Core Data: \(error).")
+                completion(.failure(error))
+                return
+            }
+            
+            switch result {
+            case let .success(photos):
+                let photoIDs = photos.map { return $0.objectID }
+                let viewContext = self.persistentContainer.viewContext
+                let viewContextPhotos = photoIDs.map { return viewContext.object(with: $0) } as! [Photo]
+                completion(.success(viewContextPhotos))
+            case .failure:
+                completion(result)
+            }
+>>>>>>> 41d8733 (Arreglo Tags y persistencia, pendiente el inicio del CollectionView)
         }
         task.resume()
     }
@@ -69,8 +92,26 @@ class PhotoStore {
     
     func fetchImage(for photo: Photo, completion: @escaping (ImageResult) -> Void) {
         
+<<<<<<< HEAD
         let photoURL = photo.remoteURL
         let request = URLRequest(url: photoURL)
+=======
+        guard let photoKey = photo.photoID else {
+            preconditionFailure("Photo expected to have a photoID")
+        }
+        if let image = imageStore.image(forKey: photoKey) {
+            OperationQueue.main.addOperation {
+                completion(.success(image))
+            }
+            return
+        }
+        
+        guard let photoURL = photo.remoteURL else {
+            preconditionFailure("Photo expected to have a remote URL")
+        }
+      //No estoy seguro de ese as!, el libro dice que es sin !
+        let request = URLRequest(url: photoURL as URL)
+>>>>>>> 41d8733 (Arreglo Tags y persistencia, pendiente el inicio del CollectionView)
         
         let task = session.dataTask(with: request) {
             (data, response, error) -> Void in
